@@ -4,6 +4,7 @@
 ;; @note: Edit content below. Keep header lines starting with ';;' intact.
 ;; -------------------------
 #Requires AutoHotkey v2.0
+#Include "../ahk2_sap_wrapper/src/SapWrapper.ahk"
 
 ; ==================== CONSTANTS ====================
 ; Sleep time constants
@@ -19,6 +20,7 @@ global LOG_DEBUG := "DEBUG"
 ; ==================== GLOBAL VARIABLES ====================
 global SapGui := ""
 global SapSession := ""
+global SapApp := ""
 global ExcelApp := ""
 global ExcelWorkbook := ""
 global ExcelWorksheet := ""

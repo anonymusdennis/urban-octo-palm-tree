@@ -66,9 +66,9 @@ ProcessSpoolFromExcel() {
         ; Close Excel
         ExcelClose()
 
-    } catch Error as e {
-        ; logMessage("ERROR", "Error in main process: " . e.Message)
-        MsgBox("An error occurred: " . e.Message, "Error", 0x10)
+    } catch {
+        ; logMessage("ERROR", "Error in main process: ")
+        MsgBox("An error occurred: ", "Error", 0x10)
     }
 }
 ProcessSingleJob(currentRow)
@@ -160,7 +160,9 @@ wait_for_ctrl_v(text) {
 
     ; Define a nested function (a closure) to act as the hotkey's callback.
     ; This keeps the handler logic contained within the parent method.
-    ctrl_v_handler(*) => pressed := true
+    ctrl_v_handler(*) {
+        pressed := true
+    }
 
     ; Create a Hotkey object.
     ; The "$" prefix ensures that only a physical keypress from the user can
@@ -246,8 +248,8 @@ ReadJobDataFromExcel(rowIndex) {
         ; Clean spoolnumber (remove any spaces or non-numeric characters)
         jobData.spoolnumber := RegExReplace(jobData.spoolnumber, "[^\d]", "")
 
-    } catch Error as e {
-        ; logMessage("ERROR", "Error reading Excel data: " . e.Message)
+    } catch {
+        ; logMessage("ERROR", "Error reading Excel data: ")
     }
 
     return jobData
@@ -259,71 +261,71 @@ DownloadSpoolAsHTML(spoolNumber) {
 
     try {
         ; Navigate to SP01
-        SapSession.findById("wnd[0]/tbar[0]/okcd").text := "/nsp01"
-        SapSession.findById("wnd[0]").sendVKey(0)
+        SapSession.FindById("wnd[0]/tbar[0]/okcd").Text := "/nsp01"
+        SapSession.FindById("wnd[0]").SendVKey(0)
         Sleep(500)
 
         ; Enter spool number
         spoolField := "wnd[0]/usr/tabsTABSTRIP_BL1/tabpSCR1/ssub%_SUBSCREEN_BL1:RSPOSP01NR:0100/txtS_RQIDEN-LOW"
-        SapSession.findById(spoolField).text := spoolNumber
+        SapSession.FindById(spoolField).Text := spoolNumber
         Sleep(200)
 
         ; Execute search (F8)
-        SapSession.findById("wnd[0]/tbar[1]/btn[8]").press()
+        SapSession.FindById("wnd[0]/tbar[1]/btn[8]").Press()
         Sleep(1000)
 
         ; Click on the spool entry (assuming it's at position 15,3)
-        SapSession.findById("wnd[0]/usr/lbl[15,3]").setFocus()
+        SapSession.FindById("wnd[0]/usr/lbl[15,3]").SetFocus()
         Sleep(200)
 
         ; Double-click to open
-        SapSession.findById("wnd[0]").sendVKey(2)
+        SapSession.FindById("wnd[0]").SendVKey(2)
         Sleep(500)
 
         ; Display spool
-        SapSession.findById("wnd[0]/tbar[1]/btn[46]").press()
+        SapSession.FindById("wnd[0]/tbar[1]/btn[46]").Press()
         Sleep(500)
 
         ; Close any popup that might appear
         try {
-            SapSession.findById("wnd[1]").close()
+            SapSession.FindById("wnd[1]").Close()
         } catch {
             ; No popup, continue
         }
 
         ; Navigate to menu: System -> List -> Save -> Local File
-        SapSession.findById("wnd[0]/mbar/menu[5]/menu[5]/menu[2]/menu[2]").select()
+        SapSession.FindById("wnd[0]/mbar/menu[5]/menu[5]/menu[2]/menu[2]").Select()
         Sleep(500)
 
         ; Close any intermediate popup
         try {
-            SapSession.findById("wnd[1]").close()
+            SapSession.FindById("wnd[1]").Close()
         } catch {
             ; No popup
         }
 
         ; Alternative menu path
-        SapSession.findById("wnd[0]/mbar/menu[0]/menu[2]/menu[3]").select()
+        SapSession.FindById("wnd[0]/mbar/menu[0]/menu[2]/menu[3]").Select()
         Sleep(500)
 
         ; Select HTML format (radio button at position [3,0])
         radioButton := "wnd[1]/usr/subSUBSCREEN_STEPLOOP:SAPLSPO5:0150/sub:SAPLSPO5:0150/radSPOPLI-SELFLAG[3,0]"
-        SapSession.findById(radioButton).select()
-        SapSession.findById(radioButton).setFocus()
+        SapSession.FindById(radioButton).Select()
+        SapSession.FindById(radioButton).SetFocus()
         Sleep(200)
 
         ; Confirm format selection
-        SapSession.findById("wnd[1]/tbar[0]/btn[0]").press()
+        SapSession.FindById("wnd[1]/tbar[0]/btn[0]").Press()
         Sleep(500)
 
         ; Set file path and name
-        SapSession.findById("wnd[1]/usr/ctxtDY_PATH").text := TEMP_DIR
+        SapSession.FindById("wnd[1]/usr/ctxtDY_PATH").Text := TEMP_DIR
         tempFileName := "spool.htm"
-        SapSession.findById("wnd[1]/usr/ctxtDY_FILENAME").text := tempFileName
+        SapSession.FindById("wnd[1]/usr/ctxtDY_FILENAME").Text := tempFileName
         Sleep(200)
 
         ; Save the file
-        SapSession.findById("wnd[1]/tbar[0]/btn[0]").press()
+        SapSession.FindById("wnd[1]/tbar[0]/btn[0]").Press()
         Sleep(1000)
 
         ; Check if file was created
@@ -336,8 +338,8 @@ DownloadSpoolAsHTML(spoolNumber) {
             return ""
         }
 
-    } catch Error as e {
-        ; logMessage("ERROR", "Error downloading spool: " . e.Message)
+    } catch {
+        ; logMessage("ERROR", "Error downloading spool: ")
         return ""
     }
 }
@@ -386,4 +388,7 @@ if (!DirExist(A_ScriptDir "\; logs")) {
 
 ; Show tooltip
 ToolTip("Spool Processor Ready`nPress Ctrl+Shift+S to start", , , 1)
-SetTimer(() => ToolTip(, , , 1), -3000)
+_ClearTooltip1() {
+    ToolTip(, , , 1)
+}
+SetTimer(_ClearTooltip1, -3000)

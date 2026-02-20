@@ -72,46 +72,46 @@ class ParallelProcessor {
                     Sleep(200)
     
                     ; Set table name
-                    this.session.findById("wnd[0]/usr/subSC:/TFTO/TX_BX:1111/ctxtSP_TABNA").text := tableName
+                    this.session.FindById("wnd[0]/usr/subSC:/TFTO/TX_BX:1111/ctxtSP_TABNA").Text := tableName
     
                     ; Set max rows to 5
-                    this.session.findById("wnd[0]/usr/ssubSUBMAIN:/TFTO/TX_SELECT_DYNPRO:9300/ssubOPTSEL:/TFTO/TX_SELECT_DYNPRO:9902/subOPTIONS:/TFTO/TX_SELECT_DYNPRO:9053/txtSP_MAX").text := "5 "
+                    this.session.FindById("wnd[0]/usr/ssubSUBMAIN:/TFTO/TX_SELECT_DYNPRO:9300/ssubOPTSEL:/TFTO/TX_SELECT_DYNPRO:9902/subOPTIONS:/TFTO/TX_SELECT_DYNPRO:9053/txtSP_MAX").Text := "5 "
     
                     ; Press execute button
-                    this.session.findById("wnd[0]/tbar[1]/btn[8]").press()
+                    this.session.FindById("wnd[0]/tbar[1]/btn[8]").Press()
     
                     ; Open RFC comparison dialog
-                    this.session.findById("wnd[0]/tbar[1]/btn[48]").press()
+                    this.session.FindById("wnd[0]/tbar[1]/btn[48]").Press()
     
                     ; Select RFC option
-                    this.session.findById("wnd[1]/usr/radG_OPTION_RFC").setFocus()
-                    this.session.findById("wnd[1]/usr/radG_OPTION_RFC").select()
+                    this.session.FindById("wnd[1]/usr/radG_OPTION_RFC").SetFocus()
+                    this.session.FindById("wnd[1]/usr/radG_OPTION_RFC").Select()
     
                     ; Enter RFC destination
-                    this.session.findById("wnd[1]/usr/ctxtG_DIA_DEST").text := destination
-                    this.session.findById("wnd[1]/usr/ctxtG_DIA_DEST").caretPosition := StrLen(destination)
-                    this.session.findById("wnd[1]/tbar[0]/btn[0]").press()
+                    this.session.FindById("wnd[1]/usr/ctxtG_DIA_DEST").Text := destination
+                    this.session.FindById("wnd[1]/usr/ctxtG_DIA_DEST").CaretPosition := StrLen(destination)
+                    this.session.FindById("wnd[1]/tbar[0]/btn[0]").Press()
     
                     ; Handle popup if RFC destination doesn"t exist
                     try {
-                        this.session.findById("wnd[2]").text
+                        this.session.FindById("wnd[2]").Text
                         LogMessage("WARNING", "RFC destination " . destination . " does not exist, skipping")
-                        this.session.findById("wnd[2]/tbar[0]/btn[0]").press()
+                        this.session.FindById("wnd[2]/tbar[0]/btn[0]").Press()
                         continue
                     } catch {
                         LogMessage("INFO", "RFC destination " . destination . " exists, continuing")
                     }
     
                     ; Enter table name for RFC connection
-                    this.session.findById("wnd[1]/usr/ctxtG_TABNA_RFC").text := tableName
-                    this.session.findById("wnd[1]/usr/ctxtG_TABNA_RFC").caretPosition := StrLen(tableName)
-                    this.session.findById("wnd[1]/tbar[0]/btn[0]").press()
+                    this.session.FindById("wnd[1]/usr/ctxtG_TABNA_RFC").Text := tableName
+                    this.session.FindById("wnd[1]/usr/ctxtG_TABNA_RFC").CaretPosition := StrLen(tableName)
+                    this.session.FindById("wnd[1]/tbar[0]/btn[0]").Press()
                     
                     ; Check if table exists in destination
                     try {
-                        this.session.findById("wnd[2]").text
+                        this.session.FindById("wnd[2]").Text
                         LogMessage("WARNING", "Table " . tableName . " does not exist in destination " . destination . ", skipping")
-                        this.session.findById("wnd[2]/tbar[0]/btn[0]").press()
+                        this.session.FindById("wnd[2]/tbar[0]/btn[0]").Press()
                         continue
                     } catch {
                         LogMessage("INFO", "Table " . tableName . " exists in destination " . destination . ", continuing")
@@ -123,7 +123,7 @@ class ParallelProcessor {
                         if (fieldData.key == "X" && fieldName != "MANDT" && fieldName != "CLIENT") {
                             keyCount++
                             if (keyCount > 2) {
-                                this.session.findById("wnd[1]/tbar[0]/btn[30]").press()
+                                this.session.FindById("wnd[1]/tbar[0]/btn[30]").Press()
                             }
                         }
                     }
@@ -132,21 +132,21 @@ class ParallelProcessor {
                     row := 0
                     for fieldName, fieldData in fields {
                         if (fieldData.key == "X" && fieldName != "MANDT" && fieldName != "CLIENT") {
-                            this.session.findById("wnd[1]/usr/tbl/TFTO/SAPLTX_SELFAETC/ctxtGS_JSEL-OLDF[0," . row . "]").text := fieldName
-                            this.session.findById("wnd[1]/usr/tbl/TFTO/SAPLTX_SELFAETC/ctxtGS_JSEL-NEWF[2," . row . "]").text := fieldName
+                            this.session.FindById("wnd[1]/usr/tbl/TFTO/SAPLTX_SELFAETC/ctxtGS_JSEL-OLDF[0," . row . "]").Text := fieldName
+                            this.session.FindById("wnd[1]/usr/tbl/TFTO/SAPLTX_SELFAETC/ctxtGS_JSEL-NEWF[2," . row . "]").Text := fieldName
                             row++
                         }
                     }
     
                     ; Toggle retain formula checkbox off
-                    this.session.findById("wnd[1]/usr/chkG_RETAIN_FMLA").selected := false
+                    this.session.FindById("wnd[1]/usr/chkG_RETAIN_FMLA").Selected := false
     
                     ; Confirm join
-                    this.session.findById("wnd[1]/tbar[0]/btn[8]").press()
+                    this.session.FindById("wnd[1]/tbar[0]/btn[8]").Press()
                     Sleep(200)
     
                     ; Open script editor
-                    this.session.findById("wnd[0]/tbar[1]/btn[31]").press()
+                    this.session.FindById("wnd[0]/tbar[1]/btn[31]").Press()
                     Sleep(200)
     
                     ; Generate and insert script with iterative field validation
@@ -166,26 +166,26 @@ class ParallelProcessor {
                         script := this.GenerateScriptFromTemplate(tableName, validFields)
                         
                         ; Insert script
-                        this.session.findById("wnd[0]/usr/cntlCC/shellcont/shell/shellcont[0]/shell").text := script
+                        this.session.FindById("wnd[0]/usr/cntlCC/shellcont/shell/shellcont[0]/shell").Text := script
                         
                         ; Check syntax
-                        this.session.findById("wnd[0]/tbar[1]/btn[27]").press()
+                        this.session.FindById("wnd[0]/tbar[1]/btn[27]").Press()
                         Sleep(200)
                         
                         ; Check for error popup
                         try {
-                            errorPopup := this.session.findById("wnd[1]")
+                            errorPopup := this.session.FindById("wnd[1]")
                             errorText := ""
                             
                             ; Try to get error message text
                             try {
-                                errorText := errorPopup.findById("usr/txtMESSTXT1").text
+                                errorText := errorPopup.FindById("usr/txtMESSTXT1").Text
                             } catch {
                                 try {
-                                    errorText := errorPopup.findById("usr/txtMESSAGE").text
+                                    errorText := errorPopup.FindById("usr/txtMESSAGE").Text
                                 } catch {
                                     ; Try generic text extraction
-                                    errorText := errorPopup.text
+                                    errorText := errorPopup.Text
                                 }
                             }
                             
@@ -200,7 +200,7 @@ class ParallelProcessor {
                             }
                             
                             ; Close error popup
-                            this.session.findById("wnd[1]/tbar[0]/btn[0]").press()
+                            this.session.FindById("wnd[1]/tbar[0]/btn[0]").Press()
                             Sleep(100)
                             
                         } catch {
@@ -212,17 +212,17 @@ class ParallelProcessor {
                             scriptName := "MANDT_" . tableName . "_" . destination
                             
                             ; Press save button
-                            this.session.findById("wnd[0]/tbar[0]/btn[11]").press()
+                            this.session.FindById("wnd[0]/tbar[0]/btn[11]").Press()
                             Sleep(200)
                             
                             try {
                                 ; Enter script name in save dialog
-                                this.session.findById("wnd[1]/usr/ctxtRS38M-PROGRAMM").text := scriptName
-                                this.session.findById("wnd[1]/tbar[0]/btn[0]").press()
+                                this.session.FindById("wnd[1]/usr/ctxtRS38M-PROGRAMM").Text := scriptName
+                                this.session.FindById("wnd[1]/tbar[0]/btn[0]").Press()
                                 
                                 ; Handle overwrite confirmation if script already exists
                                 try {
-                                    this.session.findById("wnd[2]/tbar[0]/btn[0]").press()
+                                    this.session.FindById("wnd[2]/tbar[0]/btn[0]").Press()
                                 } catch {
                                     ; No overwrite needed
                                 }
@@ -230,8 +230,8 @@ class ParallelProcessor {
                                 LogMessage("INFO", "Script saved: " . scriptName)
                                 LogMessage("success", tableName .destination .scriptName)
                                 
-                            } catch Error as e {
-                                LogMessage("ERROR", "Failed to save script: " . e.Message)
+                            } catch {
+                                LogMessage("ERROR", "Failed to save script: ")
                                 continue
                             }
                         }
@@ -247,8 +247,8 @@ class ParallelProcessor {
                 this.completedTasks++
                 LogMessage("INFO", "Progress: " . this.completedTasks . "/" . this.totalTasks . " tables processed")
                 
-            } catch Error as e {
-                LogError("Worker " . worker.sessionId . " error processing " . tableName . ": " . e.Message)
+            } catch {
+                LogError("Worker " . worker.sessionId . " error processing " . tableName . ": ")
                 continue
             }
         }
@@ -332,20 +332,20 @@ ReadDD03LFields(session, tableName) {
         LogMessage(LOG_INFO, "Reading DD03L fields for table: " tableName)
 
         ; Navigate to SE16N
-        session.findById("wnd[0]/tbar[0]/okcd").Text := "/nSE16N"
-        session.findById("wnd[0]").sendVKey(0)
+        session.FindById("wnd[0]/tbar[0]/okcd").Text := "/nSE16N"
+        session.FindById("wnd[0]").SendVKey(0)
         Sleep(200)
 
         ; Enter DD03L table
-        session.findById("wnd[0]/usr/ctxtGD-TAB").Text := "DD03L"
-        session.findById("wnd[0]").sendVKey(0)
+        session.FindById("wnd[0]/usr/ctxtGD-TAB").Text := "DD03L"
+        session.FindById("wnd[0]").SendVKey(0)
         Sleep(200)
 
         ; Set tabname
         ExecuteSapCommand(session, "REMARKALL") ; => remove all markings.
         SetSapFieldDirect("wnd[0]/usr/tblSAPLSE16NSELFIELDS_TC/ctxtGS_SELFIELDS-LOW[1,7]", "")
         SetSapFieldDirect("wnd[0]/usr/tblSAPLSE16NSELFIELDS_TC/ctxtGS_SELFIELDS-LOW[1,7]", "",session)
-        session.findById("wnd[0]/usr/tblSAPLSE16NSELFIELDS_TC/ctxtGS_SELFIELDS-LOW[1,7]").setFocus()
+        session.FindById("wnd[0]/usr/tblSAPLSE16NSELFIELDS_TC/ctxtGS_SELFIELDS-LOW[1,7]").SetFocus()
         Sleep(200)
         ExecuteSapCommand(session, "OPTION")
         Sleep(200)
@@ -363,15 +363,15 @@ ReadDD03LFields(session, tableName) {
 
         ; Check for possible popup (e.g., too many entries)
         try {
-            popup := session.findById("wnd[1]")
+            popup := session.FindById("wnd[1]")
             if (IsSet(popup)) {
                 ; Click Continue/OK button
                 try {
-                    session.findById("wnd[1]/tbar[0]/btn[0]").Press()
+                    session.FindById("wnd[1]/tbar[0]/btn[0]").Press()
                     Sleep(200)
                 } catch {
                     ; Try alternative approach - Enter key
-                    session.findById("wnd[1]").sendVKey(0)
+                    session.FindById("wnd[1]").SendVKey(0)
                 }
             }
         } catch {
@@ -381,7 +381,7 @@ ReadDD03LFields(session, tableName) {
         ; Identify the grid control - common path for SE16N results
         gridControl := ""
         try {
-            gridControl := session.findById("wnd[0]/usr/cntlRESULT_LIST/shellcont/shell")
+            gridControl := session.FindById("wnd[0]/usr/cntlRESULT_LIST/shellcont/shell")
             LogMessage(LOG_INFO, "Found results grid at standard path")
         } catch {
 
@@ -434,8 +434,8 @@ ReadDD03LFields(session, tableName) {
 
         return results
     }
-    catch Error as e {
-        LogMessage(LOG_ERROR, "Error reading DD03L fields: " e.Message)
+    catch {
+        LogMessage(LOG_ERROR, "Error reading DD03L fields: ")
         return {}
     }
 }

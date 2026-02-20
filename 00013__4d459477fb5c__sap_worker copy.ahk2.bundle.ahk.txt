@@ -125,8 +125,8 @@ class SAPWorker {
                 this.last_config := FileRead(CONFIG_FILE)
                 this.config := JSON.Parse(this.last_config)
                 return true
-            } catch Error as e {
-                LogError("Worker " . this.workerId . ": Failed to initialize config - " . e.Message)
+            } catch {
+                LogError("Worker " . this.workerId . ": Failed to initialize config - ")
                  ;  ; set_status(this, "Failed to initialize config")
                 return false
             }
@@ -139,8 +139,8 @@ class SAPWorker {
             this.config := JSON.Parse(currentConfigText)
 
             return true
-        } catch Error as e {
-            LogError("Worker " . this.workerId . ": Failed to load config - " . e.Message)
+        } catch {
+            LogError("Worker " . this.workerId . ": Failed to load config - ")
              ;  ; set_status(this, "Failed to load config")
             return false
         }
@@ -175,9 +175,9 @@ class SAPWorker {
 
             this.UnlockConfig()
             return true
-        } catch Error as e {
+        } catch {
             this.UnlockConfig()
-            LogError("Worker " . this.workerId . ": Failed to save config - " . e.Message)
+            LogError("Worker " . this.workerId . ": Failed to save config - ")
              ;  ; set_status(this, "Failed to save config")
             return false
         }
@@ -294,9 +294,9 @@ class SAPWorker {
             }
 
             this.UnlockConfig()
-        } catch Error as e {
+        } catch {
             this.UnlockConfig()
-            LogError("GetNextTask error: " . e.Message)
+            LogError("GetNextTask error: ")
         }
 
          ;  ; set_status(this, "No pending task found")
@@ -319,7 +319,10 @@ class SAPWorker {
                 Error("Worker config not found")
             }
 
-            SapGui := ComObjGet("SAPGUI").GetScriptingEngine
+            SapGuiAuto := ComObjGet("SAPGUI")
+            appCom := SapGuiAuto.GetScriptingEngine
+            policy := SapHookPolicy()
+            SapGui := GuiApplication(appCom, policy)
 
             sessionFound := false
             sessionIndex := 0
@@ -346,8 +349,8 @@ class SAPWorker {
              ;  ; set_status(this, "Connected to SAP session")
             return true
 
-        } catch Error as e {
-            LogError("Worker " . this.workerId . ": Failed to connect to SAP - " . e.Message)
+        } catch {
+            LogError("Worker " . this.workerId . ": Failed to connect to SAP - ")
             this.UpdateWorkerStatus("error", "")
              ;  ; set_status(this, "ConnectToSAP failed")
             return false
@@ -369,8 +372,7 @@ class SAPWorker {
                 try {
                 success := this.ProcessTask(task)
                 }
-                catch Error as e 
-                    {}
+                catch {}
                 if (success)
                     {
                         ; Update task status to completed
@@ -434,11 +436,11 @@ class SAPWorker {
             }
             this.SaveConfig()
             return true
-        } catch Error as e {
+        } catch {
 
-            LogError(Format("Worker {} error: {} - {}", this.workerId, task["tableName"], e.Message))
-             ;  ; set_status(this, "Task failed: " . e.Message)
-            this.UpdateTaskStatus(task["id"], "failed", e.Message)
+            LogError(Format("Worker {} error: {} - {}", this.workerId, task["tableName"], ""))
+             ;  ; set_status(this, "Task failed: ")
+            this.UpdateTaskStatus(task["id"], "failed", "")
             return false
         }
     }
@@ -449,28 +451,28 @@ class SAPWorker {
         ExecuteSapCommand(this.session, "/n/TFTO/SE16XXL")
         Sleep(200)
          ;  ; set_status(this, "Selecting table mode in SE16XXL")
-        this.session.findById("wnd[0]/usr/subSC:/TFTO/TX_BX:1111/radSP_TAB").Select()
+        this.session.FindById("wnd[0]/usr/subSC:/TFTO/TX_BX:1111/radSP_TAB").Select()
          ;  ; set_status(this, "Setting table name")
-        this.session.findById("wnd[0]/usr/subSC:/TFTO/TX_BX:1111/ctxtSP_TABNA").text := tableName
+        this.session.FindById("wnd[0]/usr/subSC:/TFTO/TX_BX:1111/ctxtSP_TABNA").Text := tableName
          ;  ; set_status(this, "Opening select options")
         ExecuteSapCommand(this.session, "ZZSHOW")
          ;  ; set_status(this, "Setting max rows to 5")
-        this.session.findById("wnd[0]/usr/ssubSUBMAIN:/TFTO/TX_SELECT_DYNPRO:9300/ssubOPTSEL:/TFTO/TX_SELECT_DYNPRO:9902/subOPTIONS:/TFTO/TX_SELECT_DYNPRO:9053/txtSP_MAX").text := "5 "
+        this.session.FindById("wnd[0]/usr/ssubSUBMAIN:/TFTO/TX_SELECT_DYNPRO:9300/ssubOPTSEL:/TFTO/TX_SELECT_DYNPRO:9902/subOPTIONS:/TFTO/TX_SELECT_DYNPRO:9053/txtSP_MAX").Text := "5 "
          ;  ; set_status(this, "Executing selection screen")
-        this.session.findById("wnd[0]/tbar[1]/btn[8]").press()
+        this.session.FindById("wnd[0]/tbar[1]/btn[8]").Press()
          ;  ; set_status(this, "Opening RFC comparison dialog")
         ExecuteSapCommand(this.session, "ZZOUTJOIN")
-        this.session.findById("wnd[1]/usr/radG_OPTION_RFC").setFocus()
-        this.session.findById("wnd[1]/usr/radG_OPTION_RFC").select()
+        this.session.FindById("wnd[1]/usr/radG_OPTION_RFC").SetFocus()
+        this.session.FindById("wnd[1]/usr/radG_OPTION_RFC").Select()
          ;  ; set_status(this, "Setting RFC destination")
-        this.session.findById("wnd[1]/usr/ctxtG_DIA_DEST").text := destination
-        this.session.findById("wnd[1]/usr/ctxtG_DIA_DEST").caretPosition := StrLen(destination)
-        this.session.findById("wnd[1]/tbar[0]/btn[0]").press()
+        this.session.FindById("wnd[1]/usr/ctxtG_DIA_DEST").Text := destination
+        this.session.FindById("wnd[1]/usr/ctxtG_DIA_DEST").CaretPosition := StrLen(destination)
+        this.session.FindById("wnd[1]/tbar[0]/btn[0]").Press()
          ;  ; set_status(this, "Checking RFC destination popup")
         try {
-            this.session.findById("wnd[2]").text
+            this.session.FindById("wnd[2]").Text
             LogMessage("WARNING", "RFC destination " . destination . " does not exist, skipping")
-            this.session.findById("wnd[2]/tbar[0]/btn[0]").press()
+            this.session.FindById("wnd[2]/tbar[0]/btn[0]").Press()
              ;  ; set_status(this, "RFC destination does not exist, skipping")
             return
         } catch {
@@ -478,14 +480,14 @@ class SAPWorker {
              ;  ; set_status(this, "RFC destination exists")
         }
          ;  ; set_status(this, "Setting table name for RFC")
-        this.session.findById("wnd[1]/usr/ctxtG_TABNA_RFC").text := tableName
-        this.session.findById("wnd[1]/usr/ctxtG_TABNA_RFC").caretPosition := StrLen(tableName)
-        this.session.findById("wnd[1]/tbar[0]/btn[0]").press()
+        this.session.FindById("wnd[1]/usr/ctxtG_TABNA_RFC").Text := tableName
+        this.session.FindById("wnd[1]/usr/ctxtG_TABNA_RFC").CaretPosition := StrLen(tableName)
+        this.session.FindById("wnd[1]/tbar[0]/btn[0]").Press()
          ;  ; set_status(this, "Checking table existence in destination")
         try {
-            this.session.findById("wnd[2]").text
+            this.session.FindById("wnd[2]").Text
             LogMessage("WARNING", "Table " . tableName . " does not exist in destination " . destination . ", skipping")
-            this.session.findById("wnd[2]/tbar[0]/btn[0]").press()
+            this.session.FindById("wnd[2]/tbar[0]/btn[0]").Press()
              ;  ; set_status(this, "Table does not exist in destination, skipping")
             return 
         } catch {
@@ -498,7 +500,7 @@ class SAPWorker {
             if (fieldData.key = "X" && fieldData.fieldName != "MANDT" && fieldData.fieldName != "CLIENT") {
                 keyCount++
                 if (keyCount > 2) {
-                    this.session.findById("wnd[1]/tbar[0]/btn[30]").press()
+                    this.session.FindById("wnd[1]/tbar[0]/btn[30]").Press()
                 }
             }
         }
@@ -506,16 +508,16 @@ class SAPWorker {
         row := 0
         for fieldName, fieldData in fields {
             if (fieldData.key = "X" && fieldData.fieldName != "MANDT" && fieldData.fieldName != "CLIENT") {
-                this.session.findById("wnd[1]/usr/tbl/TFTO/SAPLTX_SELFAETC/ctxtGS_JSEL-OLDF[0," . row . "]").text := fieldData.fieldName
-                this.session.findById("wnd[1]/usr/tbl/TFTO/SAPLTX_SELFAETC/ctxtGS_JSEL-NEWF[2," . row . "]").text := fieldData.fieldName
+                this.session.FindById("wnd[1]/usr/tbl/TFTO/SAPLTX_SELFAETC/ctxtGS_JSEL-OLDF[0," . row . "]").Text := fieldData.fieldName
+                this.session.FindById("wnd[1]/usr/tbl/TFTO/SAPLTX_SELFAETC/ctxtGS_JSEL-NEWF[2," . row . "]").Text := fieldData.fieldName
                 row++
             }
         }
          ;  ; set_status(this, "Confirming join")
-        this.session.findById("wnd[1]/tbar[0]/btn[8]").press()
+        this.session.FindById("wnd[1]/tbar[0]/btn[8]").Press()
         Sleep(200)
          ;  ; set_status(this, "Opening script editor")
-        this.session.findById("wnd[0]/tbar[1]/btn[31]").press()
+        this.session.FindById("wnd[0]/tbar[1]/btn[31]").Press()
         Sleep(200)
         rfcContent := FileRead("rfc_destinations.cfg")
         tempRfc := StrSplit(rfcContent, "`n", "`r")
@@ -545,89 +547,89 @@ class SAPWorker {
         
          ;  ; set_status(this, "Launching batch job in SE16XXL")
         ExecuteSapCommand(this.session, "/n/TFTO/SE16XXL")
-        this.session.findById("wnd[0]/usr/subSC:/TFTO/TX_BX:1111/radSP_SCR").Select()
+        this.session.FindById("wnd[0]/usr/subSC:/TFTO/TX_BX:1111/radSP_SCR").Select()
         Sleep(200)
-        this.session.findById("wnd[0]/usr/subSC:/TFTO/TX_BX:1111/ctxtSP_SCRIP").text := SubStr(scriptName,1, 23)
+        this.session.FindById("wnd[0]/usr/subSC:/TFTO/TX_BX:1111/ctxtSP_SCRIP").Text := SubStr(scriptName,1, 23)
         Sleep(200)
         ExecuteSapCommand(this.session, "ZZSHOW")
         Sleep(200)
         ExecuteSapCommand(this.session, "ZZENTER")
         Sleep(200)
-        this.session.findById("wnd[0]/usr").Children[0].Children[0].Children[0].children[3].text := 50000
+        this.session.FindById("wnd[0]/usr").Children[0].Children[0].Children[0].Children[3].Text := 50000
         Sleep(200)
         try
             {
-        this.session.findById("wnd[0]/usr").Children[0].Children[0].Children[0].children[6].text := 999
+        this.session.FindById("wnd[0]/usr").Children[0].Children[0].Children[0].Children[6].Text := 999
             }
-        catch Error as e {
+        catch {
         }
         Sleep(200)
         ExecuteSapCommand(this.session, "ZZBATCH")
         Sleep(200)
-        this.session.findById("wnd[1]/usr/chkGS_POP-NON_STD").Selected := 1
+        this.session.FindById("wnd[1]/usr/chkGS_POP-NON_STD").Selected := 1
         Sleep(200)
-        this.session.findById("wnd[1]/usr/txtTBTCJOB-JOBNAME").text := SubStr("Ascript_" . tableName . "_5k_des_" . number_cnt,1,31)
+        this.session.FindById("wnd[1]/usr/txtTBTCJOB-JOBNAME").Text := SubStr("Ascript_" . tableName . "_5k_des_" . number_cnt,1,31)
         Sleep(200)
-        this.session.findById("wnd[1]/usr/radGS_POP-START_IMMED").Select()
+        this.session.FindById("wnd[1]/usr/radGS_POP-START_IMMED").Select()
         Sleep(200)
-        this.session.findById("wnd[1]/usr/chkGS_POP-RMUS_FLAG").Selected := 1
+        this.session.FindById("wnd[1]/usr/chkGS_POP-RMUS_FLAG").Selected := 1
         Sleep(200)
-        this.session.findById("wnd[1]/usr/chkGS_POP-TO_SPOOL").Selected := 1
+        this.session.FindById("wnd[1]/usr/chkGS_POP-TO_SPOOL").Selected := 1
         Sleep(200)
-        this.session.findById("wnd[1]/usr/chkGS_POP-NO_MAIL").Selected := 1
+        this.session.FindById("wnd[1]/usr/chkGS_POP-NO_MAIL").Selected := 1
         Sleep(200)
         ExecuteSapCommand(this.session, "ZZOK")
 
         ;;;; SETTINGS FOR PRINTING ;;;;;
 
         Sleep(200)
-        this.session.findById("wnd[1]/usr/ctxtPRI_PARAMS-PDEST").text := "LOCAL"
+        this.session.FindById("wnd[1]/usr/ctxtPRI_PARAMS-PDEST").Text := "LOCAL"
 
         Sleep(200)
         try
             {
                 ; if popup saying Aufbereitung auf 'X_65_255' gesetzt appears, we need to handle it
-                this.session.findById("wnd[2]")
+                this.session.FindById("wnd[2]")
             	ExecuteSapCommand(this.session, "WEIT")
             }
-        catch Error as e {
-            LogMessage("INFO", "No export popup found: " . e.Message)
+        catch {
+            LogMessage("INFO", "No export popup found: ")
         }
         /*
         ExecuteSapCommand(this.session, "EXPT")
         Sleep(200)
         try
             {
-                this.session.findById("wnd[2]")
+                this.session.FindById("wnd[2]")
         ExecuteSapCommand(this.session, "WEIT")
             }
-        catch Error as e {
-            LogMessage("INFO", "No export popup found: " . e.Message)
+        catch {
+            LogMessage("INFO", "No export popup found: ")
         }
         Sleep(200)
         try
             {
-        this.session.findById("wnd[2]/usr/tabsTABSTRIP/tabpTAB2/ssubSUBSCREEN:SAPLSPRI:0500/cntlCUSTOM/shellcont/shell").doubleclickNode("PAART")
+        this.session.FindById("wnd[2]/usr/tabsTABSTRIP/tabpTAB2/ssubSUBSCREEN:SAPLSPRI:0500/cntlCUSTOM/shellcont/shell").doubleclickNode("PAART")
         Sleep(200)
-        this.session.findById("wnd[2]/usr/tabsTABSTRIP/tabpTAB2/ssubSUBSCREEN:SAPLSPRI:0500/ssubSUBSCREEN:SAPLSPRI:0600/ctxtPRI_PARAMS-PAART").text := "X_PAPER"
+        this.session.FindById("wnd[2]/usr/tabsTABSTRIP/tabpTAB2/ssubSUBSCREEN:SAPLSPRI:0500/ssubSUBSCREEN:SAPLSPRI:0600/ctxtPRI_PARAMS-PAART").Text := "X_PAPER"
         Sleep(200)
-        this.session.findById("wnd[2]/usr/tabsTABSTRIP/tabpTAB2/ssubSUBSCREEN:SAPLSPRI:0500/ssubSUBSCREEN:SAPLSPRI:0600/txtPRI_PARAMS-LINSZ").text := 1023
+        this.session.FindById("wnd[2]/usr/tabsTABSTRIP/tabpTAB2/ssubSUBSCREEN:SAPLSPRI:0500/ssubSUBSCREEN:SAPLSPRI:0600/txtPRI_PARAMS-LINSZ").Text := 1023
             }
-        catch Error as e {
-            LogMessage("INFO", "Failed to set print parameters: " . e.Message)
+        catch {
+            LogMessage("INFO", "Failed to set print parameters: ")
         }
         Sleep(200)
         try
             {
         ExecuteSapCommand(this.session, "WEIT")
             }
-        catch Error as e {
-            LogMessage("INFO", "Failed to wait for print parameters: " . e.Message)
+        catch {
+            LogMessage("INFO", "Failed to wait for print parameters: ")
         }
         */
         try
             {
-                this.session.findById("wnd[2]")
+                this.session.FindById("wnd[2]")
         ExecuteSapCommand(this.session, "WEIT")
             }
         Sleep(200)
@@ -635,8 +637,8 @@ class SAPWorker {
             {
         ExecuteSapCommand(this.session, "SAVE")
             }
-        catch Error as e {
-            LogMessage("INFO", "Failed to save print parameters: " . e.Message)
+        catch {
+            LogMessage("INFO", "Failed to save print parameters: ")
         }
 
         Sleep(200)
@@ -644,8 +646,8 @@ class SAPWorker {
             {
         ExecuteSapCommand(this.session, "WEIT")
             }
-        catch Error as e {
-            LogMessage("INFO", "Failed to wait after saving print parameters: " . e.Message)
+        catch {
+            LogMessage("INFO", "Failed to wait after saving print parameters: ")
         }
         Sleep(200)
          ;  ; set_status(this, "Batch job launched")
@@ -666,18 +668,18 @@ class SAPWorker {
             attempts++
             script := this.GenerateScriptFromTemplate(tableName, validFields)
              ;  ; set_status(this, "Inserting script and syntax check")
-            this.session.findById("wnd[0]/usr/cntlCC/shellcont/shell/shellcont[0]/shell").text := script
-            this.session.findById("wnd[0]/tbar[1]/btn[27]").press()
+            this.session.FindById("wnd[0]/usr/cntlCC/shellcont/shell/shellcont[0]/shell").Text := script
+            this.session.FindById("wnd[0]/tbar[1]/btn[27]").Press()
             Sleep(200)
             try {
-                errorPopup := this.session.findById("wnd[1]")
+                errorPopup := this.session.FindById("wnd[1]")
                 errorText := ""
                 has_errored := false
                 message_row := 1
                 while (has_errored == false)  ; Loop until we have the entire message
                 {
                     try {
-                        errorText .= errorPopup.findById("usr/lbl[0," . message_row . "]").text
+                        errorText .= errorPopup.FindById("usr/lbl[0," . message_row . "]").Text
                         message_row := message_row + 1
                         has_errored := false
                     } catch {
@@ -703,7 +705,7 @@ class SAPWorker {
                     harderror := true
                     Error("Unexpected syntax error: " . errorText)
                 }
-                this.session.findById("wnd[1]/tbar[0]/btn[0]").press()
+                this.session.FindById("wnd[1]/tbar[0]/btn[0]").Press()
                 Sleep(100)
             } catch {
                 if (!harderror)
@@ -712,22 +714,22 @@ class SAPWorker {
                      ;  ; set_status(this, "Script syntax check passed")
                     scriptGenerated := true
                     try {
-                        colnames := this.session.findById("wnd[0]/usr/cntlGRID1/shellcont/shell/shellcont[1]/shell").columnOrder
-                    } catch Error as e {
+                        colnames := this.session.FindById("wnd[0]/usr/cntlGRID1/shellcont/shell/shellcont[1]/shell").ColumnOrder
+                    } catch {
                         ;try setting grid
                         try
                             {
                         ExecuteSapCommand(this.session, "ZZUSPARM")
-                        this.session.findById("wnd[1]/usr/tabsTABS/tabpZDTBR/ssubTABSUB:/TFTO/SAPLTX_USER_SETT:9100/radGS_DIA-TBALV_GRID").select()
-                        this.session.findById("wnd[1]/usr/tabsTABS/tabpZDTBR/ssubTABSUB:/TFTO/SAPLTX_USER_SETT:9100/chkGS_DIA-TBCOUNT").selected := true
-                        this.session.findById("wnd[1]/usr/tabsTABS/tabpZDTBR/ssubTABSUB:/TFTO/SAPLTX_USER_SETT:9100/radGS_DIA-FIELDNAME").select()
-                        this.session.findById("wnd[1]/usr/tabsTABS/tabpZDTBR/ssubTABSUB:/TFTO/SAPLTX_USER_SETT:9100/radGS_DIA-FIELDNAME").setFocus()
-                        this.session.findById("wnd[1]/tbar[0]/btn[0]").press()
-                        colnames := this.session.findById("wnd[0]/usr/cntlGRID1/shellcont/shell/shellcont[1]/shell").columnOrder
+                        this.session.FindById("wnd[1]/usr/tabsTABS/tabpZDTBR/ssubTABSUB:/TFTO/SAPLTX_USER_SETT:9100/radGS_DIA-TBALV_GRID").Select()
+                        this.session.FindById("wnd[1]/usr/tabsTABS/tabpZDTBR/ssubTABSUB:/TFTO/SAPLTX_USER_SETT:9100/chkGS_DIA-TBCOUNT").Selected := true
+                        this.session.FindById("wnd[1]/usr/tabsTABS/tabpZDTBR/ssubTABSUB:/TFTO/SAPLTX_USER_SETT:9100/radGS_DIA-FIELDNAME").Select()
+                        this.session.FindById("wnd[1]/usr/tabsTABS/tabpZDTBR/ssubTABSUB:/TFTO/SAPLTX_USER_SETT:9100/radGS_DIA-FIELDNAME").SetFocus()
+                        this.session.FindById("wnd[1]/tbar[0]/btn[0]").Press()
+                        colnames := this.session.FindById("wnd[0]/usr/cntlGRID1/shellcont/shell/shellcont[1]/shell").ColumnOrder
                             }
 
-                        catch Error as e {
-                            LogMessage("ERROR", "Failed to set grid: " . e.Message)
+                        catch {
+                            LogMessage("ERROR", "Failed to set grid: ")
                              ;  ; set_status(this, "Failed to set grid")
                             Error("Failed to set grid")
                             return false
@@ -736,36 +738,36 @@ class SAPWorker {
 
                     for rowIdx in range(0, colnames.Length - 1) {
                         if (SubStr(colnames[rowIdx], 1, 3) = "_XX") {
-                            this.session.findById("wnd[0]/usr/cntlGRID1/shellcont/shell/shellcont[1]/shell").selectColumn(colnames[rowIdx])
+                            this.session.FindById("wnd[0]/usr/cntlGRID1/shellcont/shell/shellcont[1]/shell").SelectColumn(colnames[rowIdx])
                             ExecuteSapCommand(this.session, "ZZFILTER")
                             ExecuteSapCommand(this.session, "ZZMORE_001")
                             ExecuteSapCommand(this.session, "ZOPTI001")
-                            this.session.findById("wnd[3]/usr/cntlOPTION_CONTAINER/shellcont/shell").selectedRows(5)
+                            this.session.FindById("wnd[3]/usr/cntlOPTION_CONTAINER/shellcont/shell").SelectedRows(5)
                             ExecuteSapCommand(this.session, "OKAY")
                             ExecuteSapCommand(this.session, "ZZOKAY")
                             ExecuteSapCommand(this.session, "ZZKEEP")
                             break
                         }
                     }
-                    this.session.findById("wnd[0]/tbar[0]/btn[11]").press()
+                    this.session.FindById("wnd[0]/tbar[0]/btn[11]").Press()
                     Sleep(200)
                     try {
-                        this.session.findById("wnd[1]/usr/ctxtSP_SCRIP").text := SubStr( scriptName , 1, 23)
-                        this.session.findById("wnd[1]/usr/chkSP_SGLOB").Selected := 1
+                        this.session.FindById("wnd[1]/usr/ctxtSP_SCRIP").Text := SubStr( scriptName , 1, 23)
+                        this.session.FindById("wnd[1]/usr/chkSP_SGLOB").Selected := 1
                         timestamp := FormatTime(, "yyyy_MM_dd HH:mm:ss")
-                        this.session.findById("wnd[1]/usr/txtSP_STEXT").text := SubStr( "[" . timestamp . "]: Autogen For " . tableName . " & " . destination,1, 59 )
-                        this.session.findById("wnd[1]/tbar[0]/btn[0]").press()
+                        this.session.FindById("wnd[1]/usr/txtSP_STEXT").Text := SubStr( "[" . timestamp . "]: Autogen For " . tableName . " & " . destination,1, 59 )
+                        this.session.FindById("wnd[1]/tbar[0]/btn[0]").Press()
                         try {
                             ExecuteSapCommand(this.session, "YES")
-                            this.session.findById("wnd[2]/tbar[0]/btn[0]").press()
+                            this.session.FindById("wnd[2]/tbar[0]/btn[0]").Press()
                         } catch {
                             ; No overwrite needed
                         }
                         LogMessage("INFO", "Script saved: " . scriptName)
                         LogSuccess(tableName . " -> " . destination . " : " . scriptName)
                          ;  ; set_status(this, "Script saved: " . scriptName)
-                    } catch Error as e {
-                        LogMessage("ERROR", "Failed to save script: " . e.Message)
+                    } catch {
+                        LogMessage("ERROR", "Failed to save script: ")
                          ;  ; set_status(this, "Failed to save script")
                         Error("Failed to save script")
                     }
@@ -782,16 +784,16 @@ class SAPWorker {
            ; set_status(this, "Reading DD03L for " . tableName)
         try {
             LogMessage(LOG_INFO, "Reading DD03L fields for table: " tableName)
-            this.session.findById("wnd[0]/tbar[0]/okcd").Text := "/nSE16N"
-            this.session.findById("wnd[0]").sendVKey(0)
+            this.session.FindById("wnd[0]/tbar[0]/okcd").Text := "/nSE16N"
+            this.session.FindById("wnd[0]").SendVKey(0)
             Sleep(200)
-            this.session.findById("wnd[0]/usr/ctxtGD-TAB").Text := "DD03L"
-            this.session.findById("wnd[0]").sendVKey(0)
+            this.session.FindById("wnd[0]/usr/ctxtGD-TAB").Text := "DD03L"
+            this.session.FindById("wnd[0]").SendVKey(0)
             Sleep(200)
             ExecuteSapCommand(this.session, "REMARKALL")
             SetSapFieldDirect("wnd[0]/usr/tblSAPLSE16NSELFIELDS_TC/ctxtGS_SELFIELDS-LOW[1,7]", "", this.session)
             SetSapFieldDirect("wnd[0]/usr/tblSAPLSE16NSELFIELDS_TC/ctxtGS_SELFIELDS-LOW[1,7]", "", this.session)
-            this.session.findById("wnd[0]/usr/tblSAPLSE16NSELFIELDS_TC/ctxtGS_SELFIELDS-LOW[1,7]").setFocus()
+            this.session.FindById("wnd[0]/usr/tblSAPLSE16NSELFIELDS_TC/ctxtGS_SELFIELDS-LOW[1,7]").SetFocus()
             Sleep(200)
             ExecuteSapCommand(this.session, "OPTION")
             Sleep(200)
@@ -804,20 +806,20 @@ class SAPWorker {
             ExecuteSapCommand(this.session, "EXEC")
             Sleep(500)
             try {
-                popup := this.session.findById("wnd[1]")
+                popup := this.session.FindById("wnd[1]")
                 if (IsSet(popup)) {
                     try {
-                        this.session.findById("wnd[1]/tbar[0]/btn[0]").Press()
+                        this.session.FindById("wnd[1]/tbar[0]/btn[0]").Press()
                         Sleep(200)
                     } catch {
-                        this.session.findById("wnd[1]").sendVKey(0)
+                        this.session.FindById("wnd[1]").SendVKey(0)
                     }
                 }
             } catch {
             }
             gridControl := ""
             try {
-                gridControl := this.session.findById("wnd[0]/usr/cntlRESULT_LIST/shellcont/shell")
+                gridControl := this.session.FindById("wnd[0]/usr/cntlRESULT_LIST/shellcont/shell")
                 LogMessage(LOG_INFO, "Found results grid at standard path")
             } catch {
                 LogMessage(LOG_ERROR, "Could not find results grid")
@@ -870,9 +872,9 @@ class SAPWorker {
         }
         
         
-        catch Error as e {
-            LogError("Worker " . this.workerId . ": Failed to read DD03L fields for table " . tableName . " - " . e.Message)
-             ;  ; set_status(this, "ReadDD03L failed: " . e.Message)
+        catch {
+            LogError("Worker " . this.workerId . ": Failed to read DD03L fields for table " . tableName . " - ")
+             ;  ; set_status(this, "ReadDD03L failed: ")
             return []
         }
     }
@@ -972,9 +974,9 @@ class SAPWorker {
             ; Append to file
             try {
                 FileAppend(logEntry, logFile)
-            } catch Error as e {
+            } catch {
                 ; If we can't write to the log file, at least output to debug
-                OutputDebug("Failed to write to removed_fields.log: " . e.Message)
+                OutputDebug("Failed to write to removed_fields.log: ")
             }
         }
         
@@ -1011,10 +1013,10 @@ LoadAllGridData(grid) {
         Loop Min(visibleRows, totalRows - currentRow) {
             rowIndex := currentRow + A_Index - 1
             try {
-                check := grid.getCellValue(rowIndex, grid.columnOrder[0])
+                check := grid.getCellValue(rowIndex, grid.ColumnOrder[0])
                 rowData := Map()
-                for rowIdx in range(0, grid.columnOrder.Length - 1) {
-                    colName := grid.columnOrder[rowIdx]
+                for rowIdx in range(0, grid.ColumnOrder.Length - 1) {
+                    colName := grid.ColumnOrder[rowIdx]
                     value := grid.getCellValue(rowIndex, colName)
                     rowData[colName] := value
                 }
@@ -1023,8 +1025,8 @@ LoadAllGridData(grid) {
         }
         currentRow += visibleRows
         try {
-            grid.setCurrentCell(currentRow, grid.columnOrder[0])
-        } catch Error as e {
+            grid.setCurrentCell(currentRow, grid.ColumnOrder[0])
+        } catch {
         }
         if (currentRow < totalRows) {
             grid.firstVisibleRow := currentRow
@@ -1074,7 +1076,7 @@ LoadAllGridData(grid) {
             file.Write("")
             file.Close()
             return
-        } catch Error as e {
+        } catch {
             ; Release lock on error
             try {
                 file := FileOpen(LOCK_FILE, "w")

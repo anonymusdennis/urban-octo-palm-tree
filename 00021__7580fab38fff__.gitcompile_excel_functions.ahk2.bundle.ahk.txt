@@ -4,6 +4,7 @@
 ;; @note: Edit content below. Keep header lines starting with ';;' intact.
 ;; -------------------------
 #Requires AutoHotkey v2.0
+#Include "../ahk2_sap_wrapper/src/SapWrapper.ahk"
 
 ; ==================== EXCEL FUNCTIONS ====================
 ExcelOpen(filePath) {
@@ -63,8 +64,8 @@ ExcelOpen(filePath) {
                         break
                     }
                 }
-            } catch Error as e {
-                LogMessage(LOG_INFO, "Error checking open workbooks: " e.Message)
+            } catch {
+                LogMessage(LOG_INFO, "Error checking open workbooks: ")
             }
         }
 
@@ -100,8 +101,8 @@ ExcelOpen(filePath) {
         global ExcelIsOpen := true
         LogMessage(LOG_INFO, "Excel file ready for use")
         return true
-    } catch Error as e {
-        LogMessage(LOG_INFO, "Error opening Excel file: " e.Message)
+    } catch {
+        LogMessage(LOG_INFO, "Error opening Excel file: ")
         CleanupExcel()
         return false
     }
@@ -115,8 +116,8 @@ ExcelReadCell(row, col) {
     try {
         value := ExcelWorksheet.Cells(row, col).Value
         return value
-    } catch Error as e {
-        LogMessage(LOG_INFO, "Error reading cell [" row "," col "]: " e.Message)
+    } catch {
+        LogMessage(LOG_INFO, "Error reading cell [" row "," col "]: ")
         return ""
     }
 }
@@ -130,8 +131,8 @@ ExcelWriteCell(row, col, value) {
     try {
         ExcelWorksheet.Cells(row, col).Value := value
         return true
-    } catch Error as e {
-        LogMessage(LOG_INFO, "Error writing to cell [" row "," col "]: " e.Message)
+    } catch {
+        LogMessage(LOG_INFO, "Error writing to cell [" row "," col "]: ")
         return false
     }
 }
@@ -146,8 +147,8 @@ ExcelSelectSheet(sheetNameOrIndex) {
         global ExcelWorksheet := ExcelWorkbook.Worksheets(sheetNameOrIndex)
         ExcelWorksheet.Activate()
         return true
-    } catch Error as e {
-        LogMessage(LOG_INFO, "Error selecting worksheet: " e.Message)
+    } catch {
+        LogMessage(LOG_INFO, "Error selecting worksheet: ")
         return false
     }
 }
@@ -164,8 +165,8 @@ ExcelGetLastRow(column := "A") {
             lastRow++
         }
         return lastRow - 1
-    } catch Error as e {
-        LogMessage(LOG_INFO, "Error finding last row: " e.Message)
+    } catch {
+        LogMessage(LOG_INFO, "Error finding last row: ")
         return 0
     }
 }
@@ -181,29 +182,29 @@ ExcelClose(saveChanges := false) {
                 ExcelWorkbook.Save()
                 LogMessage(LOG_INFO, "Excel file saved")
                 return true
-            } catch Error as e {
-                LogMessage(LOG_INFO, "Could not save Excel file: " e.Message)
+            } catch {
+                LogMessage(LOG_INFO, "Could not save Excel file: ")
             }
         }
 
         if (IsSet(ExcelWorkbook)) {
             try {
                 ; ExcelWorkbook.Close(false)
-            } catch Error as e {
-                LogMessage(LOG_INFO, "Could not close workbook properly: " e.Message)
+            } catch {
+                LogMessage(LOG_INFO, "Could not close workbook properly: ")
             }
         }
 
         if (IsSet(ExcelApp)) {
             try {
                 ; ExcelApp.Quit()
-            } catch Error as e {
-                LogMessage(LOG_INFO, "Could not quit Excel properly: " e.Message)
+            } catch {
+                LogMessage(LOG_INFO, "Could not quit Excel properly: ")
             }
         }
         return true
-    } catch Error as e {
-        LogMessage(LOG_INFO, "Error closing Excel: " e.Message)
+    } catch {
+        LogMessage(LOG_INFO, "Error closing Excel: ")
         CleanupExcel()
         return false
     }
@@ -242,8 +243,8 @@ EnsureErrorSheet() {
                 ExcelWriteCell(1, 6, "Vendor Name")
 
                 LogMessage(LOG_INFO, "Created Sheet 5 for error logging")
-            } catch Error as e {
-                LogMessage(LOG_INFO, "Could not create error sheet: " e.Message)
+            } catch {
+                LogMessage(LOG_INFO, "Could not create error sheet: ")
                 return false
             }
         }
@@ -251,8 +252,8 @@ EnsureErrorSheet() {
         ; Return to original sheet
         ExcelWorksheet := currentSheet
         return true
-    } catch Error as e {
-        LogMessage(LOG_INFO, "Error ensuring error sheet: " e.Message)
+    } catch {
+        LogMessage(LOG_INFO, "Error ensuring error sheet: ")
         return false
     }
 }
@@ -316,7 +317,7 @@ HandleTableControlPopup(rowIndex, vendorName := "", lieferantenNr := "") {
         ; Check if popup exists (wnd[1])
         popup := ""
         try {
-            popup := SapSession.findById("wnd[1]")
+            popup := SapSession.FindById("wnd[1]")
             ; Verify it's the protocol popup
             popupTitle := popup.Text
             if (!InStr(popupTitle, "Protokoll")) {
@@ -332,10 +333,10 @@ HandleTableControlPopup(rowIndex, vendorName := "", lieferantenNr := "") {
         ; Get the grid control
         gridControl := ""
         try {
-            gridControl := SapSession.findById("wnd[1]/usr/cntlGRID1/shellcont/shell")
+            gridControl := SapSession.FindById("wnd[1]/usr/cntlGRID1/shellcont/shell")
             LogMessage(LOG_INFO, "Found protocol grid control")
-        } catch Error as e {
-            LogMessage(LOG_INFO, "Could not find grid control: " e.Message)
+        } catch {
+            LogMessage(LOG_INFO, "Could not find grid control: ")
             return false
         }
 
@@ -461,8 +462,8 @@ HandleTableControlPopup(rowIndex, vendorName := "", lieferantenNr := "") {
                         rowHasData := true
                         cellsRead++
                     }
-                } catch Error as e {
-                    LogMessage(LOG_DEBUG, "Error reading cell [" rowIdx "," columnName "]: " e.Message)
+                } catch {
+                    LogMessage(LOG_DEBUG, "Error reading cell [" rowIdx "," columnName "]: ")
                 }
 
                 ExcelWriteCell(excelRow, colIdx + 1, cellValue)
@@ -476,7 +477,7 @@ HandleTableControlPopup(rowIndex, vendorName := "", lieferantenNr := "") {
 
         ; Try to get statusbar message as fallback
         try {
-            statusBar := SapSession.findById("wnd[1]/sbar")
+            statusBar := SapSession.FindById("wnd[1]/sbar")
             if (statusBar) {
                 statusType := statusBar.MessageType
                 statusText := statusBar.Text
@@ -513,12 +514,12 @@ HandleTableControlPopup(rowIndex, vendorName := "", lieferantenNr := "") {
 
         ; Try to close the popup using the OK button (btn[0])
         try {
-            okButton := SapSession.findById("wnd[1]/tbar[0]/btn[0]")
+            okButton := SapSession.FindById("wnd[1]/tbar[0]/btn[0]")
             okButton.Press()
             LogMessage(LOG_INFO, "Closed protocol popup")
         } catch {
             try {
-                popup.sendVKey(0)  ; Enter key as fallback
+                popup.SendVKey(0)  ; Enter key as fallback
             } catch {
                 LogMessage(LOG_INFO, "Could not close popup automatically")
             }
@@ -526,8 +527,8 @@ HandleTableControlPopup(rowIndex, vendorName := "", lieferantenNr := "") {
 
         return true
 
-    } catch Error as e {
-        LogMessage(LOG_INFO, "Error handling protocol popup: " e.Message)
+    } catch {
+        LogMessage(LOG_INFO, "Error handling protocol popup: ")
 
         ; Try to return to original sheet
         try {
@@ -603,8 +604,8 @@ EnsureSheet7() {
         LogMessage(LOG_INFO, "Created Sheet 7 for protocol logs")
         return true
 
-    } catch Error as e {
-        LogMessage(LOG_INFO, "Could not create Sheet 7: " e.Message)
+    } catch {
+        LogMessage(LOG_INFO, "Could not create Sheet 7: ")
         return false
     }
 }

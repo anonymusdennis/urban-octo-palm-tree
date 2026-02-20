@@ -81,7 +81,7 @@ class SyncSession {
     findById(id) {
         OutputDebug("Finding element: " . id)
         this.WaitReady()
-        element := this._raw.findById(id)
+        element := this._raw.FindById(id)
         this.WaitReady()
         return SyncWrapper(element, this)
     }

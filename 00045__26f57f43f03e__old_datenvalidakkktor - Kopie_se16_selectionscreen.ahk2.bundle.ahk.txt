@@ -22,12 +22,12 @@ MarkField(fieldName, on := true, localSession := SapSession) {
 
         try {
             ; Try to get row count from table control
-            rowCount := localSession.findById(tableId).RowCount
+            rowCount := localSession.FindById(tableId).RowCount
             LogMessage(LOG_DEBUG, "Table has " rowCount " rows")
-        } catch Error as e {
+        } catch {
             ; If can't get row count directly, use a reasonable default
             rowCount := 50  ; Try up to 50 rows
-            LogMessage(LOG_WARNING, "Could not get row count, will try up to " rowCount " rows: " e.Message)
+            LogMessage(LOG_WARNING, "Could not get row count, will try up to " rowCount " rows: ")
         }
 
         ; Column indices - these are fixed in SE16N
@@ -44,7 +44,7 @@ MarkField(fieldName, on := true, localSession := SapSession) {
             ;            if (rowIdx > 0 && rowIdx % 20 == 0) {  ; Assuming 20 visible rows at a time
             ;                try {
             ;                    ; Try to page down
-            ;                    localSession.findById(tableId).verticalScrollbar.position := rowIdx
+            ;                    localSession.FindById(tableId).verticalScrollbar.position := rowIdx
             ;                    Sleep SleepTimeShort
             ;                } catch {
             ;                    ; If scrolling fails, we may have reached the end
@@ -57,7 +57,7 @@ MarkField(fieldName, on := true, localSession := SapSession) {
                 fieldNamePath := tableId . "/txtGS_SELFIELDS-FIELDNAME[" . fieldNameColIdx . "," . rowIdx . "]"
 
                 ; Get the field name at this row
-                cellValue := localSession.findById(fieldNamePath).Text
+                cellValue := localSession.FindById(fieldNamePath).Text
 
                 if (cellValue = fieldName) {
                     targetRow := rowIdx
@@ -88,7 +88,7 @@ MarkField(fieldName, on := true, localSession := SapSession) {
 
             ; Fallback method: try clicking the checkbox directly
             try {
-                checkBox := localSession.findById(checkboxPath)
+                checkBox := localSession.FindById(checkboxPath)
                 if (on) {
                     if (!checkBox.Selected) {
                         checkBox.Selected := true
@@ -100,14 +100,14 @@ MarkField(fieldName, on := true, localSession := SapSession) {
                 }
                 LogMessage(LOG_INFO, "Field '" fieldName "' " (on ? "marked" : "unmarked") " using fallback method")
                 return true
-            } catch Error as e {
-                LogMessage(LOG_ERROR, "Fallback method also failed: " e.Message)
+            } catch {
+                LogMessage(LOG_ERROR, "Fallback method also failed: ")
                 return false
             }
         }
 
-    } catch Error as e {
-        LogMessage(LOG_ERROR, "Error in MarkField: " e.Message)
+    } catch {
+        LogMessage(LOG_ERROR, "Error in MarkField: ")
         return false
     }
 }
@@ -131,8 +131,8 @@ UnmarkAll(localSession := SapSession) {
         LogMessage(LOG_INFO, "All fields unmarked successfully")
         return true
 
-    } catch Error as e {
-        LogMessage(LOG_ERROR, "Error unmarking all fields: " e.Message)
+    } catch {
+        LogMessage(LOG_ERROR, "Error unmarking all fields: ")
         return false
     }
 }
@@ -161,7 +161,7 @@ SetFieldValue(fieldName, valueFrom, valueTo := "", selectOption := "EQ", localSe
 
         try {
             ; Get row count via property
-            rowCount := localSession.findById(gridControlId).RowCount
+            rowCount := localSession.FindById(gridControlId).RowCount
 
             ; Find our field
             Loop rowCount {
@@ -169,7 +169,7 @@ SetFieldValue(fieldName, valueFrom, valueTo := "", selectOption := "EQ", localSe
                 cellPath := gridControlId . "/cell[" . fieldColumn . "," . rowIdx . "]"
 
                 try {
-                    cellValue := localSession.findById(cellPath).Text
+                    cellValue := localSession.FindById(cellPath).Text
                     if (cellValue = fieldName) {
                         fieldRowIndex := rowIdx
                         break
@@ -178,7 +178,7 @@ SetFieldValue(fieldName, valueFrom, valueTo := "", selectOption := "EQ", localSe
                     ; Try alternative method - using column index if name doesn't work
                     try {
                         cellPath := gridControlId . "/cell[0," . rowIdx . "]"
-                        cellValue := localSession.findById(cellPath).Text
+                        cellValue := localSession.FindById(cellPath).Text
                         if (cellValue = fieldName) {
                             fieldRowIndex := rowIdx
                             break
@@ -188,22 +188,22 @@ SetFieldValue(fieldName, valueFrom, valueTo := "", selectOption := "EQ", localSe
                     }
                 }
             }
-        } catch Error as e {
-            LogMessage(LOG_WARNING, "Could not use cell paths, trying direct access: " e.Message)
+        } catch {
+            LogMessage(LOG_WARNING, "Could not use cell paths, trying direct access: ")
 
             ; Alternative: Try to find field using button press
             try {
                 ; Set the cursor in the first row
-                localSession.findById(gridControlId).setFocus()
+                localSession.FindById(gridControlId).SetFocus()
 
                 ; Try to search for the field by name
-                localSession.findById("wnd[0]").sendVKey(70)  ; F7 for search
+                localSession.FindById("wnd[0]").SendVKey(70)  ; F7 for search
                 Sleep SleepTimeShort
 
                 ; Enter field name in search box
                 try {
-                    localSession.findById("wnd[1]/usr/txtGS_SEARCH-VALUE").Text := fieldName
-                    localSession.findById("wnd[1]/tbar[0]/btn[0]").Press()  ; Execute search
+                    localSession.FindById("wnd[1]/usr/txtGS_SEARCH-VALUE").Text := fieldName
+                    localSession.FindById("wnd[1]/tbar[0]/btn[0]").Press()  ; Execute search
                     Sleep SleepTimeShort
 
                     ; If search succeeded, we're now at the right row
@@ -227,17 +227,17 @@ SetFieldValue(fieldName, valueFrom, valueTo := "", selectOption := "EQ", localSe
             optionButtonId := gridControlId . "/btnPUSH[1," . fieldRowIndex . "]"  ; Assuming OPTION is column 1
 
             try {
-                localSession.findById(optionButtonId).Press()
-            } catch Error as e1 {
-                LogMessage(LOG_WARNING, "Could not press option button directly: " e1.Message)
+                localSession.FindById(optionButtonId).Press()
+            } catch {
+                LogMessage(LOG_WARNING, "Could not press option button directly: ")
 
                 ; Try alternative approach - click OPTION cell
                 try {
                     optionCellId := gridControlId . "/cell[1," . fieldRowIndex . "]"
-                    localSession.findById(optionCellId).setFocus()
-                    localSession.findById("wnd[0]").sendVKey(2)  ; F2 or double-click
-                } catch Error as e2 {
-                    LogMessage(LOG_ERROR, "Could not open option popup: " e2.Message)
+                    localSession.FindById(optionCellId).SetFocus()
+                    localSession.FindById("wnd[0]").SendVKey(2)  ; F2 or double-click
+                } catch {
+                    LogMessage(LOG_ERROR, "Could not open option popup: ")
                     return false
                 }
             }
@@ -254,16 +254,16 @@ SetFieldValue(fieldName, valueFrom, valueTo := "", selectOption := "EQ", localSe
             lowCellId := gridControlId . "/cell[2," . fieldRowIndex . "]"  ; Assuming LOW is column 2
 
             try {
-                localSession.findById(lowCellId).setFocus()
-                localSession.findById(lowCellId).Text := valueFrom
-            } catch Error as e {
-                LogMessage(LOG_WARNING, "Could not set LOW value directly: " e.Message)
+                localSession.FindById(lowCellId).SetFocus()
+                localSession.FindById(lowCellId).Text := valueFrom
+            } catch {
+                LogMessage(LOG_WARNING, "Could not set LOW value directly: ")
 
                 ; Try alternative method - modifyCell if available
                 try {
-                    localSession.findById(gridControlId).modifyCell(fieldRowIndex, "LOW", valueFrom)
+                    localSession.FindById(gridControlId).modifyCell(fieldRowIndex, "LOW", valueFrom)
                 } catch {
-                    LogMessage(LOG_ERROR, "Could not set LOW value: " e.Message)
+                    LogMessage(LOG_ERROR, "Could not set LOW value: ")
                     return false
                 }
             }
@@ -273,16 +273,16 @@ SetFieldValue(fieldName, valueFrom, valueTo := "", selectOption := "EQ", localSe
                 highCellId := gridControlId . "/cell[3," . fieldRowIndex . "]"  ; Assuming HIGH is column 3
 
                 try {
-                    localSession.findById(highCellId).setFocus()
-                    localSession.findById(highCellId).Text := valueTo
-                } catch Error as e {
-                    LogMessage(LOG_WARNING, "Could not set HIGH value directly: " e.Message)
+                    localSession.FindById(highCellId).SetFocus()
+                    localSession.FindById(highCellId).Text := valueTo
+                } catch {
+                    LogMessage(LOG_WARNING, "Could not set HIGH value directly: ")
 
                     ; Try alternative method
                     try {
-                        localSession.findById(gridControlId).modifyCell(fieldRowIndex, "HIGH", valueTo)
+                        localSession.FindById(gridControlId).modifyCell(fieldRowIndex, "HIGH", valueTo)
                     } catch {
-                        LogMessage(LOG_ERROR, "Could not set HIGH value: " e.Message)
+                        LogMessage(LOG_ERROR, "Could not set HIGH value: ")
                         return false
                     }
                 }
@@ -291,13 +291,13 @@ SetFieldValue(fieldName, valueFrom, valueTo := "", selectOption := "EQ", localSe
             LogMessage(LOG_INFO, "Set field '" fieldName "' with option '" selectOption "', value from '" valueFrom "'" (valueTo != "" ? " to '" valueTo "'" : ""))
             return true
 
-        } catch Error as e {
-            LogMessage(LOG_ERROR, "Error setting values for field '" fieldName "': " e.Message)
+        } catch {
+            LogMessage(LOG_ERROR, "Error setting values for field '" fieldName "': ")
             return false
         }
 
-    } catch Error as e {
-        LogMessage(LOG_ERROR, "Error in SetFieldValue: " e.Message)
+    } catch {
+        LogMessage(LOG_ERROR, "Error in SetFieldValue: ")
         return false
     }
 }
@@ -312,10 +312,10 @@ ControlSelectOptionPopup(option, localSession := SapSession) {
 
     try {
         ; Check if popup exists
-        popup := localSession.findById("wnd[1]")
+        popup := localSession.FindById("wnd[1]")
 
         ; Access the grid control
-        optionGrid := localSession.findById("wnd[1]/usr/cntlGRID/shellcont/shell")
+        optionGrid := localSession.FindById("wnd[1]/usr/cntlGRID/shellcont/shell")
 
         ; Map option codes to their SAP icons
         iconMap := Map(
@@ -358,10 +358,10 @@ ControlSelectOptionPopup(option, localSession := SapSession) {
 
             if (iconValue = targetIcon) {
                 ; Select the row
-                optionGrid.selectedRows := rowIdx
+                optionGrid.SelectedRows := rowIdx
                 Sleep SleepTimeShort
                 ; Double-click to confirm selection
-                localSession.findById("wnd[1]").sendVKey(0)  ; F2 or double-click
+                localSession.FindById("wnd[1]").SendVKey(0)  ; F2 or double-click
 
 
                 LogMessage(LOG_INFO, "Selected option '" option "' (icon: " targetIcon ") at row " rowIdx)
@@ -372,8 +372,8 @@ ControlSelectOptionPopup(option, localSession := SapSession) {
         LogMessage(LOG_ERROR, "Option '" option "' with icon '" targetIcon "' not found")
         return false
 
-    } catch Error as e {
-        LogMessage(LOG_ERROR, "Error in ControlSelectOptionPopup: " e.Message)
+    } catch {
+        LogMessage(LOG_ERROR, "Error in ControlSelectOptionPopup: ")
         return false
     }
 }
@@ -389,7 +389,7 @@ ExecuteSelection(maxRows := 500, localSession := SapSession) {
     try {
         ; Set maximum number of rows if needed
         try {
-            maxRowsField := localSession.findById("wnd[0]/usr/txtMAXSEL")
+            maxRowsField := localSession.FindById("wnd[0]/usr/txtMAXSEL")
             maxRowsField.Text := maxRows
             LogMessage(LOG_INFO, "Set maximum rows to: " maxRows)
         } catch {
@@ -397,14 +397,14 @@ ExecuteSelection(maxRows := 500, localSession := SapSession) {
         }
 
         ; Execute the selection (F8)
-        localSession.findById("wnd[0]").sendVKey(8)
+        localSession.FindById("wnd[0]").SendVKey(8)
         Sleep SleepTimeLong
 
         LogMessage(LOG_INFO, "Selection executed")
         return true
 
-    } catch Error as e {
-        LogMessage(LOG_ERROR, "Error executing selection: " e.Message)
+    } catch {
+        LogMessage(LOG_ERROR, "Error executing selection: ")
         return false
     }
 }
@@ -428,8 +428,8 @@ SetTechnicalView(enable := true , localSession := SapSession) {
         LogMessage(LOG_INFO, "Technical view " (enable ? "enabled" : "disabled"))
         return true
 
-    } catch Error as e {
-        LogMessage(LOG_ERROR, "Error setting technical view: " e.Message)
+    } catch {
+        LogMessage(LOG_ERROR, "Error setting technical view: ")
         return false
     }
 }
@@ -458,8 +458,8 @@ SelectFields(fieldList, localSession := SapSession) {
         LogMessage(LOG_INFO, "Selected " successCount " out of " fieldList.Length " fields")
         return successCount > 0
 
-    } catch Error as e {
-        LogMessage(LOG_ERROR, "Error selecting fields: " e.Message)
+    } catch {
+        LogMessage(LOG_ERROR, "Error selecting fields: ")
         return false
     }
 }
@@ -485,8 +485,8 @@ AddSelectionCriterion(fieldName, valueFrom, valueTo := "", selectOption := "EQ",
         ; Set the values
         return SetFieldValue(fieldName, valueFrom, valueTo, selectOption)
 
-    } catch Error as e {
-        LogMessage(LOG_ERROR, "Error adding selection criterion: " e.Message)
+    } catch {
+        LogMessage(LOG_ERROR, "Error adding selection criterion: ")
         return false
     }
 }
@@ -508,8 +508,8 @@ ClearAllSelections(localSession := SapSession) {
         LogMessage(LOG_INFO, "All selection values cleared")
         return true
 
-    } catch Error as e {
-        LogMessage(LOG_ERROR, "Error clearing selections: " e.Message)
+    } catch {
+        LogMessage(LOG_ERROR, "Error clearing selections: ")
         return false
     }
 }
@@ -528,19 +528,19 @@ ExportResults(filePath := "", format := "XLSX", localSession := SapSession) {
         ; System -> List -> Save -> Local File
 
         ; Open system menu
-        localSession.findById("wnd[0]/mbar/menu[4]").Select()
+        localSession.FindById("wnd[0]/mbar/menu[4]").Select()
         Sleep SleepTimeShort
 
         ; Navigate to List
-        localSession.findById("wnd[0]/mbar/menu[4]/menu[5]").Select()
+        localSession.FindById("wnd[0]/mbar/menu[4]/menu[5]").Select()
         Sleep SleepTimeShort
 
         ; Navigate to Save
-        localSession.findById("wnd[0]/mbar/menu[4]/menu[5]/menu[2]").Select()
+        localSession.FindById("wnd[0]/mbar/menu[4]/menu[5]/menu[2]").Select()
         Sleep SleepTimeShort
 
         ; Select Local File
-        localSession.findById("wnd[0]/mbar/menu[4]/menu[5]/menu[2]/menu[2]").Select()
+        localSession.FindById("wnd[0]/mbar/menu[4]/menu[5]/menu[2]/menu[2]").Select()
         Sleep SleepTimeMedium
 
         ; Handle file format selection popup
@@ -554,12 +554,12 @@ ExportResults(filePath := "", format := "XLSX", localSession := SapSession) {
             )
 
             if (formatMap.Has(format)) {
-                radioButton := localSession.findById("wnd[1]/usr/subSUBSCREEN_STEPLOOP:SAPLSPO5:0150/sub:SAPLSPO5:0150/radSPOPLI-SELFLAG[" formatMap[format] ",0]")
+                radioButton := localSession.FindById("wnd[1]/usr/subSUBSCREEN_STEPLOOP:SAPLSPO5:0150/sub:SAPLSPO5:0150/radSPOPLI-SELFLAG[" formatMap[format] ",0]")
                 radioButton.Select()
             }
 
             ; Confirm format selection
-            localSession.findById("wnd[1]/tbar[0]/btn[0]").Press()
+            localSession.FindById("wnd[1]/tbar[0]/btn[0]").Press()
             Sleep SleepTimeMedium
 
         } catch {
@@ -569,8 +569,8 @@ ExportResults(filePath := "", format := "XLSX", localSession := SapSession) {
         ; Handle file save dialog
         if (filePath != "") {
             try {
-                filePathField := localSession.findById("wnd[1]/usr/ctxtDY_PATH")
-                fileNameField := localSession.findById("wnd[1]/usr/ctxtDY_FILENAME")
+                filePathField := localSession.FindById("wnd[1]/usr/ctxtDY_PATH")
+                fileNameField := localSession.FindById("wnd[1]/usr/ctxtDY_FILENAME")
 
                 ; Split path and filename
                 SplitPath(filePath, &fileName, &dirPath)
@@ -579,19 +579,19 @@ ExportResults(filePath := "", format := "XLSX", localSession := SapSession) {
                 fileNameField.Text := fileName
 
                 ; Confirm save
-                localSession.findById("wnd[1]/tbar[0]/btn[11]").Press()
+                localSession.FindById("wnd[1]/tbar[0]/btn[11]").Press()
 
                 LogMessage(LOG_INFO, "Results exported to: " filePath)
                 return true
 
-            } catch Error as e {
-                LogMessage(LOG_ERROR, "Error saving export file: " e.Message)
+            } catch {
+                LogMessage(LOG_ERROR, "Error saving export file: ")
                 return false
             }
         }
 
-    } catch Error as e {
-        LogMessage(LOG_ERROR, "Error exporting results: " e.Message)
+    } catch {
+        LogMessage(LOG_ERROR, "Error exporting results: ")
         return false
     }
 }
@@ -607,11 +607,11 @@ GetCurrentTable(localSession := SapSession) {
 
     try {
         ; The table name is usually in a field at the top of SE16N
-        tableField := localSession.findById("wnd[0]/usr/ctxtGD-TAB")
+        tableField := localSession.FindById("wnd[0]/usr/ctxtGD-TAB")
         return tableField.Text
 
-    } catch Error as e {
-        LogMessage(LOG_ERROR, "Error getting current table: " e.Message)
+    } catch {
+        LogMessage(LOG_ERROR, "Error getting current table: ")
         return ""
     }
 }
@@ -627,18 +627,18 @@ SetTable(tableName, localSession := SapSession) {
 
     try {
         ; Set the table name
-        tableField := localSession.findById("wnd[0]/usr/ctxtGD-TAB")
+        tableField := localSession.FindById("wnd[0]/usr/ctxtGD-TAB")
         tableField.Text := tableName
 
         ; Press Enter to load the table
-        localSession.findById("wnd[0]").sendVKey(0)
+        localSession.FindById("wnd[0]").SendVKey(0)
         Sleep SleepTimeLong
 
         LogMessage(LOG_INFO, "Table set to: " tableName)
         return true
 
-    } catch Error as e {
-        LogMessage(LOG_ERROR, "Error setting table: " e.Message)
+    } catch {
+        LogMessage(LOG_ERROR, "Error setting table: ")
         return false
     }
 }
@@ -660,29 +660,29 @@ SaveVariant(variantName, description := "", localSession := SapSession) {
         ; Fill variant details in popup
         try {
             ; Variant name
-            varNameField := localSession.findById("wnd[1]/usr/ctxtRS38L-VARIANT")
+            varNameField := localSession.FindById("wnd[1]/usr/ctxtRS38L-VARIANT")
             varNameField.Text := variantName
 
             ; Description if provided
             if (description != "") {
-                descField := localSession.findById("wnd[1]/usr/txtRS38L-VARIANT_TEXT")
+                descField := localSession.FindById("wnd[1]/usr/txtRS38L-VARIANT_TEXT")
                 descField.Text := description
             }
 
             ; Save the variant
-            localSession.findById("wnd[1]/tbar[0]/btn[0]").Press()
+            localSession.FindById("wnd[1]/tbar[0]/btn[0]").Press()
             Sleep SleepTimeMedium
 
             LogMessage(LOG_INFO, "Variant '" variantName "' saved successfully")
             return true
 
-        } catch Error as e {
-            LogMessage(LOG_ERROR, "Error filling variant details: " e.Message)
+        } catch {
+            LogMessage(LOG_ERROR, "Error filling variant details: ")
             return false
         }
 
-    } catch Error as e {
-        LogMessage(LOG_ERROR, "Error saving variant: " e.Message)
+    } catch {
+        LogMessage(LOG_ERROR, "Error saving variant: ")
         return false
     }
 }

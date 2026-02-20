@@ -145,7 +145,10 @@ class TaskDistributor {
 
     DiscoverSAPSessions() {
         try {
-            SapGui := ComObjGet("SAPGUI").GetScriptingEngine
+            SapGuiAuto := ComObjGet("SAPGUI")
+            appCom := SapGuiAuto.GetScriptingEngine
+            policy := SapHookPolicy()
+            SapGui := GuiApplication(appCom, policy)
             sessionIndex := 0
             for connection in SapGui.Children {
                 for session in connection.Children {
@@ -167,8 +170,8 @@ class TaskDistributor {
                 }
             }
             LogMessage("INFO", "Found " . this.availableSessions.Length . " SAP sessions")
-        } catch Error as e {
-            Error("Could not connect to SAP GUI: " . e.Message)
+        } catch {
+            Error("Could not connect to SAP GUI: ")
         }
     }
 
@@ -391,8 +394,8 @@ class TaskDistributor {
             file := FileOpen(CONFIG_FILE, "w")
             file.Write(jsonText)
             file.Close()
-        } catch Error as e {
-            LogError("Failed to save config: " . e.Message)
+        } catch {
+            LogError("Failed to save config: ")
         }
     }
 
@@ -427,8 +430,8 @@ class TaskDistributor {
                         this.StartNextWorker()
                     }
                     return
-                } catch Error as e {
-                    LogError("Failed to start worker " . worker["id"] . ": " . e.Message)
+                } catch {
+                    LogError("Failed to start worker " . worker["id"] . ": ")
                     worker["status"] := "failed"
                     worker["current_status"] := "Failed to start"
                     this.SaveConfig()
@@ -482,8 +485,14 @@ class TaskDistributor {
         btnStop := this.progressGui.Add("Button", "w100", "&Stop All")
         btnClose := this.progressGui.Add("Button", "x+10 w100", "&Close")
 
-        btnStop.OnEvent("Click", (*) => this.StopAllWorkers())
-        btnClose.OnEvent("Click", (*) => asasd())
+        _BtnStopClickHandler(*) {
+            this.StopAllWorkers()
+        }
+        _BtnCloseClickHandler(*) {
+            asasd()
+        }
+        btnStop.OnEvent("Click", _BtnStopClickHandler)
+        btnClose.OnEvent("Click", _BtnCloseClickHandler)
         asasd()
         {
             {
@@ -568,7 +577,7 @@ class TaskDistributor {
                     this.ShowSummary()
                 }
 
-            } catch Error as e {
+            } catch {
                 try {
                     this.workerListView.Opt("+Redraw")
                 } catch {
@@ -624,8 +633,8 @@ ParseConfigFiles() {
             }
         }
         LogMessage("INFO", "Loaded " Databases.Length " databases")
-    } catch Error as e {
-        LogError("Failed to read databases.cfg: " e.Message)
+    } catch {
+        LogError("Failed to read databases.cfg: ")
         return false
     }
 
@@ -639,16 +648,16 @@ ParseConfigFiles() {
             }
         }
         LogMessage("INFO", "Loaded " RfcDestinations.Length " RFC destinations")
-    } catch Error as e {
-        LogError("Failed to read rfc_destinations.cfg: " e.Message)
+    } catch {
+        LogError("Failed to read rfc_destinations.cfg: ")
         return false
     }
 
     try {
         ScriptTemplate := FileRead("script_template.txt")
         LogMessage("INFO", "Loaded script template")
-    } catch Error as e {
-        LogError("Failed to read script_template.txt: " e.Message)
+    } catch {
+        LogError("Failed to read script_template.txt: ")
         return false
     }
 
